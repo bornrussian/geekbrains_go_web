@@ -23,12 +23,19 @@ func urlToFile (url string, destFileName string) (bool, string) {
 
 	var filename string
 	if destFileName == "parse_from_url" {
+
+		// ищем фрагмент, начинающийся с "filename="
 		re := regexp.MustCompile(`filename=.*`)
 		filename = re.FindString(url)
+
+		// убираем из фрагмента начальную часть "filename="
 		re = regexp.MustCompile(`filename=`)
 		filename = re.ReplaceAllString(filename, "");
+
+		// убираем из фрагмента конец, начинающийся с "&"
 		re = regexp.MustCompile(`&.*`)
 		filename = re.ReplaceAllString(filename, "");
+
 		fmt.Println("Имя файла из URL =", filename)
 	} else {
 		filename = destFileName
@@ -99,12 +106,6 @@ func main () {
 	flagUrl := flag.String("url", "https://yadi.sk/i/eK0nO8P0SPfWyg", "Link to Yandex.Disk public shared file")
 	flagFilename := flag.String("filename", "parse_from_url", "Filename")
 	flag.Parse()
-
-	fmt.Println("Утилита для скачивания файла с Яндекс.Диска")
-	fmt.Println("Принимаемые аргументы командной строки:")
-	fmt.Println("  --url \"https://yadi.sk/i/eK0nO8P0SPfWyg\" # Ссылка на публичнорасшаренный файл")
-	fmt.Println("  --filename \"filename.png\" # Имя файла, которое создадим на диске. Не заполняйте, если нужно прочитать имя файла из Яндекс.Диск")
-	fmt.Println("")
 
 	ok, filename := yandexDiskToFile(*flagUrl, *flagFilename)
 	if ok {
