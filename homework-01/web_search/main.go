@@ -75,13 +75,7 @@ func main () {
 	flagSearch := flag.String("search", "google-analytics", "String to find to")
 	flag.Parse()
 
-	fmt.Println("Утилита для поиска строчки в содержимом веб-страниц")
-	fmt.Println("Принимаемые аргументы командной строки:")
-	fmt.Println("  --urls \"https://google.ru,https://yandex.ru,https://mail.ru/\"")
-	fmt.Println("  --search \"google-analytics\"")
-	fmt.Println("")
-
 	sites := strings.Split(*flagUrls,",")
-	fmt.Println("Ищем на сайтах:", sites)
-	fmt.Printf("Фраза '%v' найдена на сайтах: %v",*flagSearch,whichSitesHasContent(sites, *flagSearch))
+	fmt.Printf("Ищем фразу '%v' на сайтах: %v\n", *flagSearch, sites)
+	fmt.Printf("Найдено на сайтах: %v\n",whichSitesHasContent(sites, *flagSearch))
 }
