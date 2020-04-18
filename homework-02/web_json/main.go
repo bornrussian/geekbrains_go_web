@@ -18,7 +18,7 @@ type jsonQueryStruct struct {
 
 // Структура, которой мы ответим пользователю
 type jsonReplyStruct struct {
-	Sites []string `json:"found"`
+	Sites []string `json:"found-at"`
 }
 
 // Стартуем веб-сервер
@@ -58,18 +58,19 @@ func rootHandle(w http.ResponseWriter, r *http.Request) {
 // Функция, которая принимает POST-запрос с JSON-ом
 func queryHandle(w http.ResponseWriter, r *http.Request) {
 	if isParsed := r.ParseForm(); isParsed != nil {
-		w.Write([]byte("something is wrong while post html form parsing :-("))
+
+		w.Write([]byte("{ \"error\": \"something is wrong while post html form parsing\" }"))
 	} else {
 		jsonQueryText := r.PostFormValue("json")
 		jsonQueryCode := jsonQueryStruct{}
 		if isUnmarsh := json.Unmarshal([]byte(jsonQueryText), &jsonQueryCode); isUnmarsh != nil {
-			w.Write([]byte("something is wrong while json unmarshall :-("))
+			w.Write([]byte("{ \"error\": \"something is wrong while json unmarshall\" }"))
 		} else {
 			jsonReplyCode := jsonReplyStruct{}
 			jsonReplyCode.Sites = whichSitesHasContent(jsonQueryCode.Sites, jsonQueryCode.Search)
 			jsonReplyText, isMarsh := json.MarshalIndent(jsonReplyCode,"","\t")
 			if isMarsh != nil {
-				w.Write([]byte("something is wrong while json marshall :-("))
+				w.Write([]byte("{ \"error\": \"something is wrong while json marshall\" }"))
 			} else {
 				// Сообщаем ответ в виде JSON
 				w.Write([]byte(jsonReplyText))
@@ -79,7 +80,7 @@ func queryHandle(w http.ResponseWriter, r *http.Request) {
 }
 
 // Проверяем на одном конкретном сайте, есть ли там искомый контент
-func checkOneSiteHasContent (site string, content string) bool {
+func checkOneSiteHasContent (site string, needle string) bool {
 	resp, err := http.Get(site)
 	if err != nil {
 		fmt.Println("Error!:", err)
@@ -87,7 +88,7 @@ func checkOneSiteHasContent (site string, content string) bool {
 	}
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
-	if strings.Contains(string(body), content) {
+	if strings.Contains(string(body), needle) {
 		return true
 	}
 	return false
