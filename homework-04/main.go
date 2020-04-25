@@ -14,6 +14,7 @@ package main
 import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
+	"errors"
 	"fmt"
 	"html/template"
 	"log"
@@ -36,17 +37,17 @@ type BlogEntry struct {
 }
 
 type Blog struct {
-	Posts []BlogEntry
+	DB *sql.DB
 }
 
-var database *sql.DB
+var site Blog
 
-func GetAllJokes() ([]BlogEntry, error) {
-	result := []BlogEntry{}
+func (b *Blog) GetAllJokesFromDB() ([]BlogEntry, error) {
+	var res []BlogEntry
 
-	rows, err := database.Query("SELECT * FROM jokes ORDER BY date DESC")
+	rows, err := b.DB.Query("SELECT * FROM jokes ORDER BY date DESC")
 	if err != nil {
-		return result, err
+		return res, err
 	}
 	defer rows.Close()
 
@@ -57,19 +58,20 @@ func GetAllJokes() ([]BlogEntry, error) {
 			log.Println(err)
 			continue
 		}
-		result = append(result, joke)
+		res = append(res, joke)
 	}
-	return result, nil
+	return res, nil
 }
 
-func GetSingleJoke (id int) (BlogEntry, error) {
-	joke := BlogEntry{}
-	err := database.QueryRow(fmt.Sprintf("SELECT * FROM jokes WHERE id = %v", id)).
-		Scan(&joke.ID, &joke.Autor, &joke.Date, &joke.Header, &joke.Content)
+func (b *Blog) GetSingleJokeFromDB (id int) (BlogEntry, error) {
+	var res BlogEntry
+
+	err := b.DB.QueryRow(fmt.Sprintf("SELECT * FROM jokes WHERE id = %v", id)).
+		Scan(&res.ID, &res.Autor, &res.Date, &res.Header, &res.Content)
 	if err != nil {
-		return joke, err
+		return res, err
 	}
-	return joke, nil
+	return res, nil
 }
 
 func MysqlRealEscapeString(value string) string {
@@ -80,9 +82,10 @@ func MysqlRealEscapeString(value string) string {
 	return value
 }
 
-func PushJoke (joke BlogEntry) error {
+func (b *Blog) PushJokeToDB (joke BlogEntry) error {
 	if joke.ID == "" {
-		insert, err := database.Prepare("INSERT INTO jokes (id, autor, date, header, content) VALUES (NULL, ?, ?, ?, ?);")
+		// Если ID пустой, то вставляем новую joke в базу данных
+		insert, err := b.DB.Prepare("INSERT INTO jokes (id, autor, date, header, content) VALUES (NULL, ?, ?, ?, ?);")
 			if err != nil {
 				log.Println(err)
 			} else {
@@ -95,32 +98,35 @@ func PushJoke (joke BlogEntry) error {
 				defer insert.Close()
 			}
 	} else {
-		// Убедимся, что id - это число
-		if id, convErr := strconv.Atoi(joke.ID); convErr == nil {
-			update, err := database.Prepare("UPDATE jokes SET autor = ?, date = ?, header = ?, content = ? WHERE jokes.id = ?;")
-			if err != nil {
-				log.Println(err)
+		// Если ID не пустой, то обновляем в базе данных строчку joke с таким ID
+		// Убедимся, что ID - это число
+		if id, errConv := strconv.Atoi(joke.ID); errConv == nil {
+			update, errUpdate := b.DB.Prepare("UPDATE jokes SET autor = ?, date = ?, header = ?, content = ? WHERE jokes.id = ?;")
+			if errUpdate != nil {
+				log.Println(errUpdate)
 			} else {
-				res, err := update.Exec(
+				res, errExec := update.Exec(
 					MysqlRealEscapeString(joke.Autor), MysqlRealEscapeString(joke.Date),
 					MysqlRealEscapeString(joke.Header),	MysqlRealEscapeString(joke.Content), id)
-				if err != nil {
+				if errExec != nil {
 					log.Println(res)
 				}
 				defer update.Close()
 			}
+		} else {
+			return errors.New("ID is not number")
 		}
 	}
 	return nil
 }
 
-func DeleteJoke(id int) {
-	delete, err := database.Prepare("DELETE FROM jokes WHERE id = ? LIMIT 1;")
-	if err != nil {
-		log.Println(err)
+func (b *Blog) DeleteJokeAtDB(id int) {
+	delete, errDelete := b.DB.Prepare("DELETE FROM jokes WHERE id = ? LIMIT 1;")
+	if errDelete != nil {
+		log.Println(errDelete)
 	} else {
-		res, err := delete.Exec(id)
-		if err != nil {
+		res, errExec := delete.Exec(id)
+		if errExec != nil {
 			log.Println(res)
 		}
 		defer delete.Close()
@@ -129,25 +135,27 @@ func DeleteJoke(id int) {
 
 // Корневая страница сайта: показываем весь список постов блога
 func wwwIndex(w http.ResponseWriter, r *http.Request) {
-	var blog Blog
-	var err error
-
 	// Получаем записи блога из SQL-таблицы
-	blog.Posts, err = GetAllJokes()
-	if err != nil {
-		log.Println(err)
+	jokes, errJokes := site.GetAllJokesFromDB()
+	if errJokes != nil {
+		log.Println(errJokes)
 	}
 
+	// Готовим контент, который сунем в шаблон
+	content := struct {
+		Posts []BlogEntry
+	}{Posts: jokes}
+
 	// Читаем шаблон html страницы
-	html, err := template.ParseFiles(TEMPLATES_FILES_DIR + "index.html")
-	if err != nil {
-		log.Fatal("Failed to parse index.html:", err)
+	html, errHTML := template.ParseFiles(TEMPLATES_FILES_DIR + "index.html")
+	if errHTML != nil {
+		log.Fatal("Failed to parse index.html:", errHTML)
 	}
 
 	// Вставляем в html-шаблон те данные, которые получили
-	err = html.Execute(w, blog)
-	if err != nil {
-		log.Fatal("Failed to execute index.html:", err)
+	errExec := html.Execute(w, content)
+	if errExec != nil {
+		log.Fatal("Failed to execute index.html:", errExec)
 	}
 }
 
@@ -160,7 +168,7 @@ func wwwView(w http.ResponseWriter, r *http.Request) {
 
 		// Убедимся, что id - это число
 		if i, err := strconv.Atoi(id); err == nil {
-			post, err := GetSingleJoke(i)
+			post, err := site.GetSingleJokeFromDB(i)
 			if err == nil {
 				// Читаем шаблон html страницы
 				html, err := template.ParseFiles(TEMPLATES_FILES_DIR + "view.html")
@@ -188,7 +196,7 @@ func wwwEdit(w http.ResponseWriter, r *http.Request) {
 
 		// Убедимся, что id - это число и пробуем прочитать информацию
 		if i, convErr := strconv.Atoi(id); convErr == nil {
-			post, _ = GetSingleJoke(i)
+			post, _ = site.GetSingleJokeFromDB(i)
 		}
 
 		// Читаем шаблон html страницы
@@ -217,7 +225,7 @@ func wwwPush(w http.ResponseWriter, r *http.Request) {
 			Autor: r.PostFormValue("autor"),
 			Date: r.PostFormValue("date"),
 		}
-		PushJoke(joke)
+		site.PushJokeToDB(joke)
 		http.Redirect(w, r, "http://localhost:8080", 307)
 	}
 }
@@ -231,7 +239,7 @@ func wwwDelete(w http.ResponseWriter, r *http.Request) {
 
 		// Убедимся, что id - это число
 		if i, err := strconv.Atoi(id); err == nil {
-			DeleteJoke(i)
+			site.DeleteJokeAtDB(i)
 		}
 		http.Redirect(w, r, "http://localhost:8080", 307)
 	}
@@ -243,8 +251,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	database = db
-	defer database.Close()
+	site.DB = db
+	defer site.DB.Close()
 
 	http.Handle(STATIC_FILES_URL, http.StripPrefix(STATIC_FILES_URL, http.FileServer(http.Dir(STATIC_FILES_DIR))))
 	http.HandleFunc("/", wwwIndex)
