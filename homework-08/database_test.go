@@ -9,6 +9,9 @@ import (
 	"github.com/google/uuid"
 )
 
+const DATABASE_LOCATION = "mongodb://127.0.0.1:27017"
+const DATABASE_DBNAME = "geekbrains"
+
 func TestInsert(t *testing.T) {
 	// Подключаемся в базе данных
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

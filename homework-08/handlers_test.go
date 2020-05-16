@@ -11,9 +11,12 @@ import (
 )
 
 func TestHandlers(t *testing.T) {
+	conf, _ := ReadConfig("./config.yaml")
 	lg := logrus.New()
 	lg.SetLevel(0)
-	serv := NewServer(context.Background(), lg).Start(":8080")
+	serv := NewServer(context.Background(), lg)
+	serv.SetConfig(conf.Server)
+	serv.Start()
 
 	// Генерируем случайный пост
 	uuid, _ := uuid.NewRandom()
