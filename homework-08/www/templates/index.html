@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <title>Анекдоты</title>
+  <meta charset="UTF-8">
+  <link href="static/style.css" rel="stylesheet">
+</head>
+<body>
+<a href="/"><header class="scale5-on-hover">Анекдоты</header></a>
+<main>
+  <section class="reverse">
+  {{range .Posts}}
+  <a href="/view?id={{.ID.Hex}}">
+    <div class="item scale10-on-hover">
+      <div class="item-header">
+        {{.Header}}
+      </div>
+      <div class="item-data">
+        {{.Content}}
+      </div>
+    </div>
+  </a>
+  {{end}}
+  </section>
+  <a href="/new">
+    <div class="itemnew scale10-on-hover">
+      <div class="itemnew-header">
+        +
+      </div>
+      <div class="itemnew-data">
+        Добавить новый
+      </div>
+    </div>
+  </a>
+</main>
+</body>
+</html>

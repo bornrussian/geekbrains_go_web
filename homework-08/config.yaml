@@ -1,0 +1,17 @@
+logger:
+#  level: Debug
+  level: Info
+#  level: Warning
+#  level: Error
+  file: server.log
+
+server:
+  url: "http://localhost"
+  listen-http: ":80"
+  template-files-dir: "./www/templates/"
+  static-files-dir: "www/static"
+  static-files-url: "/static"
+  mongodb-url: "mongodb://127.0.0.1:27017"
+  mongodb-database: "geekbrains"
+  pin-for-upload: 8395
+  pin-for-delete: 9236

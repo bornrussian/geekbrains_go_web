@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <title>Анекдоты</title>
+  <meta charset="UTF-8">
+  <link href="static/style.css" rel="stylesheet">
+</head>
+<body>
+<a href="/"><header class="scale5-on-hover">Анекдоты</header></a>
+<main>
+  <div class="item">
+    <div class="item-header">
+      {{.Header}}
+    </div>
+    <div class="item-data">
+      {{.Content}}
+    </div>
+    <div class="item-footer">
+      {{.Autor}}<br><br>{{.Date}}
+    </div>
+  </div>
+  <form action="/delete" class="form-delete" method="post">
+    <input hidden type="text" name="id" value="{{.ID.Hex}}">
+    <input type="text" name="pin" value="" placeholder="Пин-код">
+    <input class="scale5-on-hover" type="submit" value="Удалить">
+  </form>
+</main>
+</body>
+</html>

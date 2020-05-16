@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <title>Анекдоты</title>
+  <meta charset="UTF-8">
+  <link href="static/style.css" rel="stylesheet">
+</head>
+<body>
+<a href="/"><header class="scale5-on-hover">Анекдоты</header></a>
+<main>
+  <form action="/push" class="form-new" method="post">
+    <input type="text" placeholder="Заголовок" name="header" required><br>
+    <textarea rows="20" placeholder="Анекдот" name="content" required></textarea><br>
+    <input type="text" placeholder="Пин-код" name="pin" required><br>
+    <center><input class="scale5-on-hover" type="submit"></center>
+  </form>
+</main>
+</body>
+</html>
