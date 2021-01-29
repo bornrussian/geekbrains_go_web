@@ -1,0 +1,73 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {},
+        "license": {}
+    },
+    "paths": {
+        "/": {
+            "get": {
+                "description": "wwwIndex - показываем корневую страницу сайта",
+                "tags": [
+                    "handlers"
+                ]
+            }
+        },
+        "/delete": {
+            "get": {
+                "description": "wwwDelete - удаляем запись блога из базы данных",
+                "tags": [
+                    "handlers"
+                ]
+            }
+        },
+        "/docs/swagger.json": {
+            "get": {
+                "description": "Returns swagger.json docs",
+                "tags": [
+                    "system"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/edit": {
+            "get": {
+                "description": "wwwEdit - форма редактирования записи блога",
+                "tags": [
+                    "handlers"
+                ]
+            }
+        },
+        "/new": {
+            "get": {
+                "description": "wwwNew - показываем форму, в которой можно внести данные для нового поста блога",
+                "tags": [
+                    "handlers"
+                ]
+            }
+        },
+        "/push": {
+            "post": {
+                "description": "wwwPush - вставляем запись блога в базу данных",
+                "tags": [
+                    "handlers"
+                ]
+            }
+        },
+        "/view": {
+            "get": {
+                "description": "wwwView - отображает одну конкретную запись блога",
+                "tags": [
+                    "handlers"
+                ]
+            }
+        }
+    }
+}
