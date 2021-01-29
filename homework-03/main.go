@@ -1,9 +1,13 @@
 //
 //  Задача:
 //
-//  1. Создайте роут и шаблон для отображения всех постов в блоге.
-//  2. Создайте роут и шаблон для просмотра конкретного поста в блоге.
-//  3. Создайте роут и шаблон для редактирования и создания материала.
+//  1. Создайте модели для своих структур в БД.
+//  2. Создайте методы для получения данных из БД по своим моделям.
+//  3. Адаптируйте роуты, которые обрабатывают запросы на получение всех постов,
+//     конкретного поста в блоге и страниц редактирования.
+//
+//  Необходимо переделать блог на работу с БД.
+//  БД можно использовать либо mysql, либо postgresql.
 //
 
 package main
@@ -22,7 +26,7 @@ import (
 
 const STATIC_FILES_DIR = "./www/static"
 const STATIC_FILES_URL = "/static/"
-const TEMPLATES_FILES_DIR = "./www/templates/"
+const TEMPLATES_FILES_DIR = "./www/templates"
 const DATABASE_DIR = "./db/"
 
 type BlogEntry struct {
@@ -64,7 +68,7 @@ func wwwIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Читаем шаблон html страницы
-	html, err := template.ParseFiles(TEMPLATES_FILES_DIR + "index.html")
+	html, err := template.ParseFiles(TEMPLATES_FILES_DIR + "/index.html")
 	if err != nil {
 		log.Fatal("Failed to parse index.html:", err)
 	}
@@ -94,7 +98,7 @@ func wwwView(w http.ResponseWriter, r *http.Request) {
 				_ = json.Unmarshal([]byte(file), &post)
 
 				// Читаем шаблон html страницы
-				html, err := template.ParseFiles(TEMPLATES_FILES_DIR + "view.html")
+				html, err := template.ParseFiles(TEMPLATES_FILES_DIR + "/view.html")
 				if err != nil {
 					log.Fatal("Failed to parse view.html:", err)
 				}
@@ -130,7 +134,7 @@ func wwwEdit(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Читаем шаблон html страницы
-		html, err := template.ParseFiles(TEMPLATES_FILES_DIR + "edit.html")
+		html, err := template.ParseFiles(TEMPLATES_FILES_DIR + "/edit.html")
 		if err != nil {
 			log.Fatal("Failed to parse edit.html:", err)
 		}
